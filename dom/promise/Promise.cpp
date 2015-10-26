@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
-#include "mozilla/dom/PromiseResolver.h"
 #include "mozilla/Preferences.h"
 #include "PromiseCallback.h"
 #include "nsContentUtils.h"
@@ -44,11 +43,63 @@ private:
   nsRefPtr<Promise> mPromise;
 };
 
+
+// This class processes the promise's callbacks with promise's result.
+class PromiseResolverTask MOZ_FINAL : public nsRunnable
+{
+public:
+  PromiseResolverTask(Promise* aPromise,
+                      JS::Handle<JS::Value> aValue,
+                      Promise::PromiseState aState)
+   : mPromise(aPromise)
+    , mValue(aValue)
+    , mState(aState)
+  {
+    MOZ_ASSERT(aPromise);
+    MOZ_ASSERT(mState != Promise::Pending);
+    MOZ_COUNT_CTOR(PromiseResolverTask);
+
+    JSContext* cx = nsContentUtils::GetSafeJSContext();
+
+    /* It's safe to use unsafeGet() here: the unsafeness comes from the
+     * possibility of updating the value of mJSObject without triggering the
+     * barriers.  However if the value will always be marked, post barriers
+     * unnecessary. */
+    JS_AddNamedValueRootRT(JS_GetRuntime(cx), mValue.unsafeGet(),
+                           "PromiseResolverTask.mValue");
+  }
+
+  ~PromiseResolverTask()
+  {
+    MOZ_COUNT_DTOR(PromiseResolverTask);
+
+    JSContext* cx = nsContentUtils::GetSafeJSContext();
+
+    /* It's safe to use unsafeGet() here: the unsafeness comes from the
+     * possibility of updating the value of mJSObject without triggering the
+     * barriers.  However if the value will always be marked, post barriers
+     * unnecessary. */
+    JS_RemoveValueRootRT(JS_GetRuntime(cx), mValue.unsafeGet());
+  }
+
+  NS_IMETHOD Run()
+  {
+    mPromise->RunResolveTask(
+      JS::Handle<JS::Value>::fromMarkedLocation(mValue.address()),
+      mState, Promise::SyncTask);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<Promise> mPromise;
+  JS::Heap<JS::Value> mValue;
+  Promise::PromiseState mState;
+};
+
 // Promise
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Promise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mResolver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResolveCallbacks);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRejectCallbacks);
   tmp->mResult = JSVAL_VOID;
@@ -57,7 +108,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Promise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResolver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResolveCallbacks);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRejectCallbacks);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
@@ -81,12 +131,11 @@ Promise::Promise(nsPIDOMWindow* aWindow)
   , mResult(JS::UndefinedValue())
   , mState(Pending)
   , mTaskPending(false)
+  , mResolvePending(false)
 {
   MOZ_COUNT_CTOR(Promise);
   NS_HOLD_JS_OBJECTS(this, Promise);
   SetIsDOMBinding();
-
-  mResolver = new PromiseResolver(this);
 }
 
 Promise::~Promise()
@@ -108,6 +157,68 @@ Promise::PrefEnabled()
   return Preferences::GetBool("dom.promise.enabled", false);
 }
 
+enum {
+  SLOT_PROMISE = 0,
+  SLOT_TASK
+};
+
+/* static */ bool
+Promise::JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp)
+{
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  JS::Rooted<JS::Value> v(aCx,
+                          js::GetFunctionNativeReserved(&args.callee(),
+                                                        SLOT_PROMISE));
+  MOZ_ASSERT(v.isObject());
+
+  Promise* promise;
+  if (NS_FAILED(UNWRAP_OBJECT(Promise, aCx, &v.toObject(), promise))) {
+    return Throw(aCx, NS_ERROR_UNEXPECTED);
+  }
+
+  Optional<JS::Handle<JS::Value> > value(aCx);
+  if (aArgc) {
+    value.Value() = args[0];
+  }
+
+  v = js::GetFunctionNativeReserved(&args.callee(), SLOT_TASK);
+  PromiseCallback::Task task = static_cast<PromiseCallback::Task>(v.toInt32());
+
+  if (task == PromiseCallback::Resolve) {
+    promise->MaybeResolve(aCx, value);
+  } else {
+    promise->MaybeReject(aCx, value);
+  }
+
+  return true;
+}
+
+/* static */ JSObject*
+Promise::CreateFunction(JSContext* aCx, JSObject* aParent, Promise* aPromise,
+                        int32_t aTask)
+{
+  JSFunction* func = js::NewFunctionWithReserved(aCx, JSCallback,
+                                                 1 /* nargs */, 0 /* flags */,
+                                                 aParent, nullptr);
+  if (!func) {
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
+
+  JS::Rooted<JS::Value> promiseObj(aCx);
+  if (!dom::WrapNewBindingObject(aCx, obj, aPromise, &promiseObj)) {
+    return nullptr;
+  }
+
+  js::SetFunctionNativeReserved(obj, SLOT_PROMISE, promiseObj);
+  js::SetFunctionNativeReserved(obj, SLOT_TASK, JS::Int32Value(aTask));
+
+  return obj;
+}
+
+
 /* static */ already_AddRefed<Promise>
 Promise::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
                     PromiseInit& aInit, ErrorResult& aRv)
@@ -122,14 +233,30 @@ Promise::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
 
   nsRefPtr<Promise> promise = new Promise(window);
 
-  aInit.Call(promise, *promise->mResolver, aRv,
-             CallbackObject::eRethrowExceptions);
+  JS::Rooted<JSObject*> resolveFunc(cx,
+                                    CreateFunction(cx, aGlobal.Get(), promise,
+                                                   PromiseCallback::Resolve));
+  if (!resolveFunc) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> rejectFunc(cx,
+                                   CreateFunction(cx, aGlobal.Get(), promise,
+                                                  PromiseCallback::Reject));
+  if (!rejectFunc) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  aInit.Call(promise, resolveFunc, rejectFunc, aRv,
+              CallbackObject::eRethrowExceptions);
   aRv.WouldReportJSException();
 
   if (aRv.IsJSException()) {
     Optional<JS::Handle<JS::Value> > value(aCx);
     aRv.StealJSException(aCx, &value.Value());
-    promise->mResolver->Reject(aCx, value);
+    promise->MaybeReject(aCx, value);
   }
 
   return promise.forget();
@@ -150,7 +277,7 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
   nsRefPtr<Promise> promise = new Promise(window);
 
   Optional<JS::Handle<JS::Value> > value(aCx, aValue);
-  promise->mResolver->Resolve(aCx, value);
+  promise->MaybeResolve(aCx, value);
   return promise.forget();
 }
 
@@ -169,7 +296,7 @@ Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
   nsRefPtr<Promise> promise = new Promise(window);
 
   Optional<JS::Handle<JS::Value> > value(aCx, aValue);
-  promise->mResolver->Reject(aCx, value);
+  promise->MaybeReject(aCx, value);
   return promise.forget();
 }
 
@@ -179,12 +306,12 @@ Promise::Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback)
   nsRefPtr<Promise> promise = new Promise(GetParentObject());
 
   nsRefPtr<PromiseCallback> resolveCb =
-    PromiseCallback::Factory(promise->mResolver,
+    PromiseCallback::Factory(promise,
                             aResolveCallback,
                             PromiseCallback::Resolve);
 
   nsRefPtr<PromiseCallback> rejectCb =
-    PromiseCallback::Factory(promise->mResolver,
+    PromiseCallback::Factory(promise,
                             aRejectCallback,
                             PromiseCallback::Reject);
 
@@ -231,9 +358,9 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
     mRejectCallbacks.AppendElement(aRejectCallback);
   }
 
-  // If promise's state is resolved, queue a task to process promise's resolve
-  // callbacks with promise's result. If promise's state is rejected, queue a task
-  // to process promise's reject callbacks with promise's result.
+  // If promise's state is resolved, queue a task to process our resolve
+  // callbacks with promise's result. If promise's state is rejected, queue a
+  // task to process our reject callbacks with promise's result.
   if (mState != Pending && !mTaskPending) {
     nsRefPtr<PromiseTask> task = new PromiseTask(this);
     NS_DispatchToCurrentThread(task);
@@ -258,6 +385,92 @@ Promise::RunTask()
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     callbacks[i]->Call(value);
   }
+}
+
+void
+Promise::MaybeResolve(JSContext* aCx,
+                      const Optional<JS::Handle<JS::Value> >& aValue,
+                      PromiseTaskSync aAsynchronous)
+{
+  if (mResolvePending) {
+    return;
+  }
+
+  ResolveInternal(aCx, aValue, aAsynchronous);
+}
+
+void
+Promise::MaybeReject(JSContext* aCx,
+                     const Optional<JS::Handle<JS::Value> >& aValue,
+                     PromiseTaskSync aAsynchronous)
+{
+  if (mResolvePending) {
+    return;
+  }
+
+  RejectInternal(aCx, aValue, aAsynchronous);
+}
+
+void
+Promise::ResolveInternal(JSContext* aCx,
+                         const Optional<JS::Handle<JS::Value> >& aValue,
+                         PromiseTaskSync aAsynchronous)
+{
+  mResolvePending = true;
+
+  // TODO: Bug 879245 - Then-able objects
+  if (aValue.WasPassed() && aValue.Value().isObject()) {
+    JS::Rooted<JSObject*> valueObj(aCx, &aValue.Value().toObject());
+    Promise* nextPromise;
+    nsresult rv = UNWRAP_OBJECT(Promise, aCx, valueObj, nextPromise);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsRefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this);
+      nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(this);
+      nextPromise->AppendCallbacks(resolveCb, rejectCb);
+      return;
+    }
+  }
+
+  // If the synchronous flag is set, process our resolve callbacks with
+  // value. Otherwise, the synchronous flag is unset, queue a task to process
+  // own resolve callbacks with value. Otherwise, the synchronous flag is
+  // unset, queue a task to process our resolve callbacks with value.
+  RunResolveTask(aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue,
+                 Resolved, aAsynchronous);
+}
+
+void
+Promise::RejectInternal(JSContext* aCx,
+                        const Optional<JS::Handle<JS::Value> >& aValue,
+                        PromiseTaskSync aAsynchronous)
+{
+  mResolvePending = true;
+
+  // If the synchronous flag is set, process our reject callbacks with
+  // value. Otherwise, the synchronous flag is unset, queue a task to process
+  // promise's reject callbacks with value.
+  RunResolveTask(aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue,
+                 Rejected, aAsynchronous);
+}
+
+void
+Promise::RunResolveTask(JS::Handle<JS::Value> aValue,
+                        PromiseState aState,
+                        PromiseTaskSync aAsynchronous)
+{
+  // If the synchronous flag is unset, queue a task to process our
+  // accept callbacks with value.
+  if (aAsynchronous == AsyncTask) {
+    nsRefPtr<PromiseResolverTask> task =
+      new PromiseResolverTask(this, aValue, aState);
+    NS_DispatchToCurrentThread(task);
+    return;
+  }
+
+  SetResult(aValue);
+  SetState(aState);
+  RunTask();
 }
 
 } // namespace dom

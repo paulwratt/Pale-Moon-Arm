@@ -7,12 +7,11 @@
  * http://dom.spec.whatwg.org/#promises
  */
 
-interface PromiseResolver {
-  void resolve(optional any value);
-  void reject(optional any value);
-};
+// TODO We use object instead Function.  There is an open issue on WebIDL to
+// have different types for "platform-provided function" and "user-provided
+// function"; for now, we just use "object".
+callback PromiseInit = void (object resolve, object reject);
 
-callback PromiseInit = void (PromiseResolver resolver);
 callback AnyCallback = any (optional any value);
 
 [PrefControlled, Constructor(PromiseInit init)]

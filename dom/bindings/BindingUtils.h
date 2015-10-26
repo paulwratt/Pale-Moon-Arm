@@ -178,6 +178,10 @@ IsDOMObject(JSObject* obj)
   return IsDOMClass(clasp) || IsDOMProxy(obj, clasp);
 }
 
+#define UNWRAP_OBJECT(Interface, cx, obj, value)                             \
+  mozilla::dom::UnwrapObject<mozilla::dom::prototypes::id::Interface,        \
+    mozilla::dom::Interface##Binding::NativeType>(cx, obj, value)
+
 // Some callers don't want to set an exception when unwrapping fails
 // (for example, overload resolution uses unwrapping to tell what sort
 // of thing it's looking at).
