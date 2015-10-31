@@ -807,7 +807,7 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
             NS_ENSURE_SUCCESS(rv, rv);
         }
         rv = rootDir->SetPermissions(0700);
-#ifndef ANDROID
+#if 0 //ndef ANDROID
         // If the profile is on the sdcard, this will fail but its non-fatal
         NS_ENSURE_SUCCESS(rv, rv);
 #endif

@@ -8,6 +8,9 @@
  * JS number type and wrapper class.
  */
 
+#pragma GCC optimize "no-single-precision-constant"
+#pragma GCC optimize "no-fast-math"
+
 #include "jsnum.h"
 
 #include "mozilla/FloatingPoint.h"

@@ -1,13 +1,12 @@
-This is the source code for the Pale Moon web browser, an alternative
-browser based on Firefox/Mozilla community code. The source tree is
-mostly laid out like other Mozilla-based products.
+This is an attempt to build Pale Moon browser for Debian/armhf
+architecture, targeting devices like Raspberry/Banana/ect. Pi,
+ODroind and the like.
 
-An explanation of the Mozilla Source Code Directory Structure and links to
-project pages with documentation can be found at:
+Supported devices:
+- Raspberry Pi 2
+- Banana Pi & Banana Pro
+- Odroid U2 and up
 
-    https://developer.mozilla.org/en/Mozilla_Source_Code_Directory_Structure
-
-For information on how to build Pale Moon yourself from this source code, see:
-
-    http://forum.palemoon.org/viewtopic.php?f=19&t=4166
-
+Supported distributions
+- Debian Wheezy
+- Debian Jessie

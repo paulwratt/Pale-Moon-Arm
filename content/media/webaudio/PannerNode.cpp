@@ -470,8 +470,8 @@ PannerNode::ComputeDopplerShift()
       WebAudioUtils::FixNaN(dopplerShift); // Avoid illegal values
 
       // Limit the pitch shifting to 4 octaves up and 3 octaves down.
-      dopplerShift = min(dopplerShift, 16.);
-      dopplerShift = max(dopplerShift, 0.125);
+      dopplerShift = min(dopplerShift, (double)16.);
+      dopplerShift = max(dopplerShift, (double)0.125);
     }
   }
 

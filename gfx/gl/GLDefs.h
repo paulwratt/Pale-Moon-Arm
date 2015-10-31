@@ -34,7 +34,9 @@
 #define LOCAL_EGL_CONDITION_SATISFIED                   0x30F6
 #define LOCAL_EGL_SUCCESS                               0x3000
 
+
 // EGL_KHR_gl_texture_2D_image
+#define LOCAL_EGL_NATIVE_PIXMAP                         0x30B0
 #define LOCAL_EGL_GL_TEXTURE_2D                         0x30B1
 
 // EGL_KHR_image_base (not supplied by EGL_KHR_image!)
