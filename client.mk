@@ -69,9 +69,7 @@ ifeq (,$(strip $(AUTOCONF)))
 AUTOCONF=$(error Could not find autoconf 2.13)
 endif
 
-AUTOCONF=autoconf2.13
-
-SH := /bin/bash
+SH := /bin/sh
 PERL ?= perl
 PYTHON ?= python
 

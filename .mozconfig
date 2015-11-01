@@ -13,6 +13,7 @@ ac_add_options --disable-updater
 ac_add_options --disable-tests
 ac_add_options --disable-mochitests
 ac_add_options --disable-debug
+ac_add_options --disable-piping
 
 ac_add_options --enable-strip
 ac_add_options --enable-jemalloc
