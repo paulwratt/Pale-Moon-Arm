@@ -146,7 +146,7 @@ public:
     const double smoothingRate = WebAudioUtils::ComputeSmoothingRate(0.02, aStream->SampleRate());
 
     if (mDelay.HasSimpleValue()) {
-      delayTime = std::max(0.0, std::min(mMaxDelay, double(mDelay.GetValue())));
+      delayTime = std::max((double)0.0, std::min(mMaxDelay, double(mDelay.GetValue())));
       if (firstTime) {
         // Initialize this only the first time to make sure that mCurrentDelayTime
         // has a valid value when we try to change the delay time further below.
@@ -156,7 +156,7 @@ public:
       // Compute the delay values for the duration of the input AudioChunk
       TrackTicks tick = aStream->GetCurrentPosition();
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
-        computedDelay[counter] = std::max(0.0, std::min(mMaxDelay,
+        computedDelay[counter] = std::max((double)0.0, std::min(mMaxDelay,
                                    double(mDelay.GetValueAtTime(tick, counter))));
       }
     }

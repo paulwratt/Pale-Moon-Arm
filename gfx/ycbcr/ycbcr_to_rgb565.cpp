@@ -65,7 +65,7 @@ typedef void (*yuv2rgb565_row_scale_nearest_func)(
 
 
 
-# if defined(MOZILLA_MAY_SUPPORT_NEON)
+# if 0//defined(MOZILLA_MAY_SUPPORT_NEON)
 
 extern "C" void ScaleYCbCr42xToRGB565_BilinearY_Row_NEON(
  const yuv2rgb565_row_scale_bilinear_ctx *ctx, int dither);
@@ -474,7 +474,7 @@ NS_GFX_(void) ScaleYCbCrToRGB565(const uint8_t *y_buf,
       source_uv_yoffs_q16 += 1<<(15+y_shift);
       if (yuv_type != YV24) {
         scale_row =
-#  if defined(MOZILLA_MAY_SUPPORT_NEON)
+#  if 0//defined(MOZILLA_MAY_SUPPORT_NEON)
          supports_neon() ? ScaleYCbCr42xToRGB565_BilinearY_Row_NEON :
 #  endif
          ScaleYCbCr42xToRGB565_BilinearY_Row_C;
@@ -546,7 +546,7 @@ NS_GFX_(bool) IsScaleYCbCrToRGB565Fast(int source_x0,
   // Very fast.
   if (width <= 0 || height <= 0)
     return true;
-#  if defined(MOZILLA_MAY_SUPPORT_NEON)
+#  if 0//defined(MOZILLA_MAY_SUPPORT_NEON)
   if (filter != FILTER_NONE) {
     int source_dx_q16;
     int source_dy_q16;
@@ -613,7 +613,7 @@ NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* y_buf,
   int y_shift;
   x_shift = yuv_type != YV24;
   y_shift = yuv_type == YV12;
-#  ifdef MOZILLA_MAY_SUPPORT_NEON
+#  if 0//def MOZILLA_MAY_SUPPORT_NEON
   if (yuv_type != YV24 && supports_neon())
   {
     for (int i = 0; i < pic_height; i++) {
@@ -654,7 +654,7 @@ NS_GFX_(bool) IsConvertYCbCrToRGB565Fast(int pic_x,
                                          int pic_height,
                                          YUVType yuv_type)
 {
-#  if defined(MOZILLA_MAY_SUPPORT_NEON)
+#  if 0//defined(MOZILLA_MAY_SUPPORT_NEON)
   return (yuv_type != YV24 && supports_neon());
 #  else
   return false;

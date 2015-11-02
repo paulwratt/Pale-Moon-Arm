@@ -545,7 +545,7 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
   float rate = mBuffer->SampleRate();
   int32_t lengthSamples = mBuffer->Length();
   double length = double(lengthSamples) / rate;
-  double offset = std::max(0.0, aOffset);
+  double offset = std::max((double)0.0, aOffset);
   double endOffset = aDuration == std::numeric_limits<double>::min() ?
                      length : std::min(aOffset + aDuration, length);
 
@@ -595,7 +595,7 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv, bool aShuttingDown)
   }
 
   ns->SetStreamTimeParameter(STOP, Context()->DestinationStream(),
-                             std::max(0.0, aWhen));
+                             std::max((double)0.0, aWhen));
 }
 
 void

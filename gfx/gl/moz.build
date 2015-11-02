@@ -104,5 +104,7 @@ CPP_SOURCES += [
     'SharedSurfaceGL.cpp',
     'SurfaceFactory.cpp',
     'SurfaceStream.cpp',
+    'GLContextProviderEGL.cpp',
+    'GLLibraryEGL.cpp',
 ]
-
+# last 2 added for Pandora...

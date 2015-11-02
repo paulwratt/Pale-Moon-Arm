@@ -3895,7 +3895,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
     return;
   }
 
-  gfxFloat lineHeight = std::max(NS_round(aLineSize.height), 1.0);
+  gfxFloat lineHeight = std::max(NS_round(aLineSize.height), (double)1.0);
   bool contextIsSaved = false;
 
   gfxFloat oldLineWidth;
@@ -4033,7 +4033,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
        */
 
       gfxFloat adv = rect.Height() - lineHeight;
-      gfxFloat flatLengthAtVertex = std::max((lineHeight - 1.0) * 2.0, 1.0);
+      gfxFloat flatLengthAtVertex = std::max(((float)lineHeight - 1.0f) * 2.0f, 1.0f);
 
       // Align the start of wavy lines to the nearest ancestor block.
       gfxFloat cycleLength = 2 * (adv + flatLengthAtVertex);
@@ -4139,7 +4139,7 @@ nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
     return;
   }
 
-  gfxFloat lineHeight = std::max(NS_round(aLineSize.height), 1.0);
+  gfxFloat lineHeight = std::max(NS_round(aLineSize.height), (double)1.0);
 
   // The y position should be set to the middle of the line.
   rect.y += lineHeight / 2;
@@ -4195,12 +4195,12 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
   gfxRect r(left, 0, right - left, 0);
 
   gfxFloat lineHeight = NS_round(aLineSize.height);
-  lineHeight = std::max(lineHeight, 1.0);
+  lineHeight = std::max((float)lineHeight, 1.0f);
 
   gfxFloat ascent = NS_round(aAscent);
   gfxFloat descentLimit = floor(aDescentLimit);
 
-  gfxFloat suggestedMaxRectHeight = std::max(std::min(ascent, descentLimit), 1.0);
+  gfxFloat suggestedMaxRectHeight = std::max(std::min(ascent, descentLimit), (double)1.0);
   r.height = lineHeight;
   if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE) {
     /**
@@ -4219,13 +4219,13 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
      * +-------------------------------------------+
      */
     gfxFloat gap = NS_round(lineHeight / 2.0);
-    gap = std::max(gap, 1.0);
+    gap = std::max((float)gap, 1.0f);
     r.height = lineHeight * 2.0 + gap;
     if (canLiftUnderline) {
       if (r.Height() > suggestedMaxRectHeight) {
         // Don't shrink the line height, because the thickness has some meaning.
         // We can just shrink the gap at this time.
-        r.height = std::max(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
+        r.height = std::max((float)suggestedMaxRectHeight, (float)lineHeight * 2.0f + 1.0f);
       }
     }
   } else if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
@@ -4249,7 +4249,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
         // because the thickness has some meaning.  E.g., the 1px wavy line and
         // 2px wavy line can be used for different meaning in IME selections
         // at same time.
-        r.height = std::max(suggestedMaxRectHeight, lineHeight * 2.0);
+        r.height = std::max((float)suggestedMaxRectHeight, (float)lineHeight * 2.0f);
       }
     }
   }
@@ -4792,10 +4792,10 @@ ComputeBlurRadius(nscoord aBlurRadius, int32_t aAppUnitsPerDevPixel, gfxFloat aS
   // standard deviation of the blur should be half the given blur value.
   gfxFloat blurStdDev = gfxFloat(aBlurRadius) / gfxFloat(aAppUnitsPerDevPixel);
 
-  gfxPoint scaledBlurStdDev = gfxPoint(std::min((blurStdDev * aScaleX),
-                                              gfxFloat(MAX_BLUR_RADIUS)) / 2.0,
-                                       std::min((blurStdDev * aScaleY),
-                                              gfxFloat(MAX_BLUR_RADIUS)) / 2.0);
+  gfxPoint scaledBlurStdDev = gfxPoint(std::min((float)(blurStdDev * aScaleX),
+                                              float(MAX_BLUR_RADIUS)) / 2.0f,
+                                       std::min((float)(blurStdDev * aScaleY),
+                                              float(MAX_BLUR_RADIUS)) / 2.0f);
   return
     gfxAlphaBoxBlur::CalculateBlurRadius(scaledBlurStdDev);
 }

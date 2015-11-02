@@ -807,7 +807,8 @@ CopySwapUTF16(const uint16_t *aInBuf, uint16_t *aOutBuf, uint32_t aLen)
 {
     const uint16_t *end = aInBuf + aLen;
     while (aInBuf < end) {
-        uint16_t value = *aInBuf;
+        uint16_t value; 
+        memcpy(&value, aInBuf, sizeof(value));
         *aOutBuf = (value >> 8) | (value & 0xff) << 8;
         aOutBuf++;
         aInBuf++;

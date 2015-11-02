@@ -581,7 +581,7 @@ else
 # We can extract the asm offsets directly from generated assembly using inline
 # asm. This is the preferred method.
 
-vpx_scale_asm_offsets.s: CFLAGS += -DINLINE_ASM
+vpx_scale_asm_offsets.s: CFLAGS += -DINLINE_ASM -O0 -fno-lto
 
 OFFSET_PATTERN := '^[a-zA-Z0-9_]* EQU'
 
@@ -593,11 +593,11 @@ GARBAGE += vpx_scale_asm_offsets.s vpx_scale_asm_offsets.asm
 
 ifdef MOZ_VP8_ENCODER
 
-vp8_asm_enc_offsets.s: CFLAGS += -DINLINE_ASM
+vp8_asm_enc_offsets.s: CFLAGS += -DINLINE_ASM -O0 -fno-lto
 
 vp8_asm_enc_offsets.s: $(srcdir)/vp8/encoder/vp8_asm_enc_offsets.c
 	$(REPORT_BUILD)
-	$(CC) -S $(COMPILE_CFLAGS) $(NO_INTEGRATED_AS_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
+	$(CC) -S $(COMPILE_CFLAGS) -O0 -fno-lto $(NO_INTEGRATED_AS_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.s
 	grep $(OFFSET_PATTERN) $< | sed -e 's/[$$\#]//g' \

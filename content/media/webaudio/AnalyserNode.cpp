@@ -178,7 +178,7 @@ AnalyserNode::GetByteFrequencyData(Uint8Array& aArray)
   for (uint32_t i = 0; i < length; ++i) {
     const double decibels = WebAudioUtils::ConvertLinearToDecibels(mOutputBuffer[i], mMinDecibels);
     // scale down the value to the range of [0, UCHAR_MAX]
-    const double scaled = std::max(0.0, std::min(double(UCHAR_MAX),
+    const double scaled = std::max((double)0.0, std::min(double(UCHAR_MAX),
                                                  UCHAR_MAX * (decibels - mMinDecibels) * rangeScaleFactor));
     buffer[i] = static_cast<unsigned char>(scaled);
   }

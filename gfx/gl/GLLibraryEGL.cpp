@@ -199,11 +199,13 @@ GLLibraryEGL::EnsureInitialized()
         mIsANGLE = true;
     }
     
+    printf_stderr("Attempting InitExtensions on libEGL.so\n");
     InitExtensions();
 
     GLLibraryLoader::PlatformLookupFunction lookupFunction =
             (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
 
+    printf_stderr("Attempting init speical extensions of libEGL.so\n");
     if (IsExtensionSupported(KHR_lock_surface)) {
         GLLibraryLoader::SymLoadStruct lockSymbols[] = {
             { (PRFuncPtr*) &mSymbols.fLockSurface,   { "eglLockSurfaceKHR",   nullptr } },

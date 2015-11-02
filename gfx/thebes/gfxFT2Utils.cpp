@@ -35,7 +35,7 @@ ScaleRoundDesignUnits(FT_Short aDesignMetric, FT_Fixed aScale)
 static void
 SnapLineToPixels(gfxFloat& aOffset, gfxFloat& aSize)
 {
-    gfxFloat snappedSize = std::max(floor(aSize + 0.5), 1.0);
+    gfxFloat snappedSize = std::max(floorf(aSize + 0.5), 1.0f);
     // Correct offset for change in size
     gfxFloat offset = aOffset - 0.5 * (aSize - snappedSize);
     // Snap offset
@@ -225,7 +225,7 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
     if (os2 && os2->ySuperscriptYOffset) {
         gfxFloat val = ScaleRoundDesignUnits(os2->ySuperscriptYOffset,
                                              ftMetrics.y_scale);
-        aMetrics->superscriptOffset = std::max(1.0, val);
+        aMetrics->superscriptOffset = std::max((double)1.0, val);
     } else {
         aMetrics->superscriptOffset = aMetrics->xHeight;
     }
@@ -235,7 +235,7 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
                                              ftMetrics.y_scale);
         // some fonts have the incorrect sign. 
         val = fabs(val);
-        aMetrics->subscriptOffset = std::max(1.0, val);
+        aMetrics->subscriptOffset = std::max((double)1.0, val);
     } else {
         aMetrics->subscriptOffset = aMetrics->xHeight;
     }
