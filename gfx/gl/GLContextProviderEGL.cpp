@@ -157,6 +157,9 @@ static EGLConfig
 CreateEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig = nullptr);
 #endif
 
+#define DEBUG
+#define NS_WARNING(s) printf_stderr(s)
+
 static EGLint gContextAttribs[] = {
     LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
     LOCAL_EGL_NONE
@@ -238,8 +241,10 @@ class GLContextEGL : public GLContext
                                                             surface,
                                                             context);
 
-        if (!glContext->Init())
+        if (!glContext->Init()) {
+            NS_WARNING("Failed to Init GLES Context");
             return nullptr;
+	}
 
         return glContext.forget();
     }
@@ -305,6 +310,7 @@ public:
         printf_stderr("Destroying context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
 
+        sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext); //RPi restored
         if (mSurface && !mPlatformContext) {
             sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
         }
@@ -2003,12 +2009,13 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
 {
     printf_stderr("GLContextProviderEGL::CreateOffscreen...\n");
     if (!sEGLLibrary.EnsureInitialized()) {
+	printf_stderr("!sEGLLibrary.EnsureInitialized\n");
         return nullptr;
     }
 
     gfxIntSize dummySize = gfxIntSize(16, 16);
     nsRefPtr<GLContextEGL> glContext;
-#if 0//defined(MOZ_X11)
+#if defined(MOZ_X11) //RPi re-enabled
     glContext = GLContextEGL::CreateEGLPixmapOffscreenContext(dummySize);
 #else
     glContext = GLContextEGL::CreateEGLPBufferOffscreenContext(dummySize);

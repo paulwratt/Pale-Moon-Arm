@@ -12,7 +12,8 @@
 #include "nsAutoPtr.h"
 #include "SurfaceTypes.h"
 
- #define XP_PANDORA 1
+#define XP_PANDORA 1
+//#define DEBUG
 
 class nsIWidget;
 class gfxASurface;
@@ -42,14 +43,12 @@ namespace gl {
 #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
 #endif
 
-#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO) || defined(XP_WIN) || defined(XP_PANDORA)
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO) || defined(XP_WIN)
 #define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
 #include "GLContextProviderImpl.h"
 #undef GL_CONTEXT_PROVIDER_NAME
-#ifndef XP_PANDORA
 #ifndef GL_CONTEXT_PROVIDER_DEFAULT
 #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
-#endif
 #endif
 #endif
 
