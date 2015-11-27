@@ -1304,7 +1304,7 @@ HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv)
   }
 
   // Clamp the time to [0, duration] as required by the spec.
-  double clampedTime = std::max(0.0, aCurrentTime);
+  double clampedTime = std::max((double)0.0, aCurrentTime);
   double duration = mDecoder->GetDuration();
   if (duration >= 0) {
     clampedTime = std::min(clampedTime, duration);

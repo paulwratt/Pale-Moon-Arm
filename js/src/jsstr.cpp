@@ -1229,7 +1229,7 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
             double d;
             if (!ToInteger(cx, args[1], &d))
                 return false;
-            pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
+            pos = uint32_t(Min(Max(d, (double)0.0), double(UINT32_MAX)));
         }
     }
 
@@ -1280,7 +1280,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
             double d;
             if (!ToInteger(cx, args[1], &d))
                 return false;
-            pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
+            pos = uint32_t(Min(Max(d, (double)0.0), double(UINT32_MAX)));
         }
     }
 
@@ -1408,7 +1408,7 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
             double d;
             if (!ToInteger(cx, args[1], &d))
                 return false;
-            pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
+            pos = uint32_t(Min(Max(d, (double)0.0), double(UINT32_MAX)));
         }
     }
 
@@ -1465,7 +1465,7 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
             double d;
             if (!ToInteger(cx, args[1], &d))
                 return false;
-            pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
+            pos = uint32_t(Min(Max(d, (double)0.0), double(UINT32_MAX)));
         }
     }
 

@@ -644,7 +644,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
         /* Step 6. */
         double d;
         JS_ALWAYS_TRUE(ToInteger(cx, space, &d));
-        d = Min(10.0, d);
+        d = Min(10.0f, (float)d);
         if (d >= 1 && !gap.appendN(' ', uint32_t(d)))
             return false;
     } else if (space.isString()) {

@@ -207,6 +207,7 @@ JSONParser::readNumber()
         return token(Error);
     }
 
+        const jschar *pandora = current.get();
     const RangedPtr<const jschar> digitStart = current;
 
     /* 0|[1-9][0-9]+ */
@@ -223,7 +224,7 @@ JSONParser::readNumber()
 
     /* Fast path: no fractional or exponent part. */
     if (current == end || (*current != '.' && *current != 'e' && *current != 'E')) {
-        TwoByteChars chars(digitStart.get(), current - digitStart);
+        TwoByteChars chars(pandora, current.get() - pandora);
         if (chars.length() < strlen("9007199254740992")) {
             // If the decimal number is shorter than the length of 2**53, (the
             // largest number a double can represent with integral precision),
@@ -235,7 +236,7 @@ JSONParser::readNumber()
 
         double d;
         const jschar *dummy;
-        if (!GetPrefixInteger(cx, digitStart.get(), current.get(), 10, &dummy, &d))
+        if (!GetPrefixInteger(cx, pandora, current.get(), 10, &dummy, &d))
             return token(OOM);
         JS_ASSERT(current == dummy);
         return numberToken(negative ? -d : d);
@@ -281,7 +282,7 @@ JSONParser::readNumber()
 
     double d;
     const jschar *finish;
-    if (!js_strtod(cx, digitStart.get(), current.get(), &finish, &d))
+    if (!js_strtod(cx, pandora, current.get(), &finish, &d))
         return token(OOM);
     JS_ASSERT(current == finish);
     return numberToken(negative ? -d : d);

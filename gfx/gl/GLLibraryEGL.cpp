@@ -11,6 +11,8 @@
 #include "prenv.h"
 #include "GLContext.h"
 
+#define NS_WARNING(s) printf_stderr(s)
+
 namespace mozilla {
 namespace gl {
 
@@ -191,19 +193,23 @@ GLLibraryEGL::EnsureInitialized()
     }
 
     mEGLDisplay = fGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (!fInitialize(mEGLDisplay, NULL, NULL))
+    if (!fInitialize(mEGLDisplay, NULL, NULL)) {
+        printf_stderr("Failed to initialize display: %X : %X\n", mEGLDisplay, fInitialize(mEGLDisplay, NULL, NULL));
         return false;
+    }
 
     const char *vendor = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_VENDOR);
     if (vendor && (strstr(vendor, "TransGaming") != 0 || strstr(vendor, "Google Inc.") != 0)) {
         mIsANGLE = true;
     }
     
+    printf_stderr("Attempting InitExtensions on libEGL.so\n");
     InitExtensions();
 
     GLLibraryLoader::PlatformLookupFunction lookupFunction =
             (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
 
+    printf_stderr("Attempting init speical extensions of libEGL.so\n");
     if (IsExtensionSupported(KHR_lock_surface)) {
         GLLibraryLoader::SymLoadStruct lockSymbols[] = {
             { (PRFuncPtr*) &mSymbols.fLockSurface,   { "eglLockSurfaceKHR",   nullptr } },

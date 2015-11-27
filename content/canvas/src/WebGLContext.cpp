@@ -60,6 +60,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 
+#define XP_PANDORA  1
+
 NS_IMETHODIMP
 WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
                                      const char* aTopic,
@@ -424,7 +426,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     // Get some prefs for some preferred/overriden things
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_PANDORA)
     bool preferEGL =
         Preferences::GetBool("webgl.prefer-egl", false);
     bool preferOpenGL =
@@ -494,16 +496,20 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         }
     }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_PANDORA)
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
         preferEGL = true;
     }
 #endif
 
     // Ask GfxInfo about what we should use
+#if defined(XP_PANDORA)
+    bool useOpenGL = false;
+#else
     bool useOpenGL = true;
+#endif
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_PANDORA)
     bool useANGLE = true;
 #endif
 
@@ -513,7 +519,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
                 useOpenGL = false;
             }
         }
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_PANDORA)
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
                 useANGLE = false;
@@ -522,7 +528,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 #endif
     }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_PANDORA)
     // allow forcing GL and not EGL/ANGLE
     if (useMesaLlvmPipe || PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
         preferEGL = false;
@@ -530,10 +536,18 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         useOpenGL = true;
     }
 #endif
-
+#if defined(XP_PANDORA)
+    //PANDORA!!!!
+    if (PR_GetEnv("MOZ_WEBGL_FORCE_GLES2")) {
+        preferEGL = true;
+        useANGLE = true;
+        useOpenGL = false;
+    }
+#endif
+    
     gfxIntSize size(width, height);
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_PANDORA)
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(size, caps);

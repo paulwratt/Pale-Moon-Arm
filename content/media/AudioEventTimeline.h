@@ -398,7 +398,7 @@ public:
       // After the duration, return the last curve value
       return aCurve[aCurveLength - 1];
     }
-    double ratio = std::max((t - startTime) / duration, 0.0);
+    double ratio = std::max((t - startTime) / duration, (double)0.0);
     if (ratio >= 1.0) {
       return aCurve[aCurveLength - 1];
     }
