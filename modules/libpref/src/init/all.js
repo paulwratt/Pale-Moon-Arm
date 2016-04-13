@@ -184,7 +184,7 @@ pref("media.opus.enabled", true);
 pref("media.wave.enabled", true);
 #endif
 #ifdef MOZ_WEBM
-pref("media.webm.enabled", true);
+pref("media.webm.enabled", false);
 #endif
 #ifdef MOZ_DASH
 pref("media.dash.enabled", false);

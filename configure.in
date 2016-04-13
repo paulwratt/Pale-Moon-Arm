@@ -6217,7 +6217,7 @@ MOZ_NATIVE_SQLITE= )
 
 if test -z "$MOZ_NATIVE_SQLITE"
 then
-    SQLITE_CFLAGS=
+    SQLITE_CFLAGS=-fno-fast-math
     SQLITE_LIBS='$(call EXPAND_LIBNAME_PATH,mozsqlite3,$(DIST)/lib)'
 else
     dnl ============================

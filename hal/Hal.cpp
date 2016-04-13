@@ -406,7 +406,7 @@ double GetScreenBrightness()
 void SetScreenBrightness(double brightness)
 {
   AssertMainThread();
-  PROXY_IF_SANDBOXED(SetScreenBrightness(clamped(brightness, 0.0, 1.0)));
+  PROXY_IF_SANDBOXED(SetScreenBrightness(clamped(brightness, (double)0.0, (double)1.0)));
 }
 
 bool SetLight(LightType light, const LightConfiguration& aConfig)

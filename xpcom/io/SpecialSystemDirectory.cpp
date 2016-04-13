@@ -538,6 +538,8 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             static const char *tPath = nullptr;
             if (!tPath) {
+                tPath = PR_GetEnv("PANDORATMP");
+            if (!tPath) {
                 tPath = PR_GetEnv("TMPDIR");
                 if (!tPath || !*tPath) {
                     tPath = PR_GetEnv("TMP");
@@ -548,6 +550,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                         }
                     }
                 }
+            }
             }
             return NS_NewNativeLocalFile(nsDependentCString(tPath),
                                          true,

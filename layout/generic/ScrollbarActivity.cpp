@@ -315,8 +315,8 @@ SetOpacityOnElement(nsIContent* aContent, double aOpacity)
 bool
 ScrollbarActivity::UpdateOpacity(TimeStamp aTime)
 {
-  double progress = (aTime - mFadeBeginTime) / FadeDuration();
-  double opacity = 1.0 - std::max(0.0, std::min(1.0, progress));
+  float progress = (aTime - mFadeBeginTime) / FadeDuration();
+  float opacity = 1.0f - std::max(0.0f, std::min(1.0f, progress));
 
   // 'this' may be getting destroyed during SetOpacityOnElement calls.
   nsWeakFrame weakFrame((do_QueryFrame(mScrollableFrame)));

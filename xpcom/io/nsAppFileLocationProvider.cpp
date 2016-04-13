@@ -208,7 +208,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile *
 #elif defined(__OpenBSD__) || defined (__FreeBSD__)
           "/usr/local/lib/mozilla/plugins";
 #else
-          "/usr/lib/mozilla/plugins";
+          "/usr/lib/mozilla2/plugins";	//PANDORA, disabled that folder
 #endif
         rv = NS_NewNativeLocalFile(nsDependentCString(sysLPlgDir),
                                    false, getter_AddRefs(localFile));

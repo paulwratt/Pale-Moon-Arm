@@ -32,7 +32,7 @@ struct gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion>
     }
 
     gfxQuaternion Slerp(const gfxQuaternion &aOther, gfxFloat aCoeff) {
-        gfxFloat dot = mozilla::clamped(DotProduct(aOther), -1.0, 1.0);
+        gfxFloat dot = mozilla::clamped((float)DotProduct(aOther), -1.0f, 1.0f);
         if (dot == 1.0) {
             return *this;
         }

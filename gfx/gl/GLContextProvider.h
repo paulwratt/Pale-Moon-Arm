@@ -12,6 +12,9 @@
 #include "nsAutoPtr.h"
 #include "SurfaceTypes.h"
 
+#define XP_PANDORA 1
+//#define DEBUG
+
 class nsIWidget;
 class gfxASurface;
 

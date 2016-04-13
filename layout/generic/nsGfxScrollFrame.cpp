@@ -1269,7 +1269,7 @@ public:
 
 protected:
   double ProgressAt(TimeStamp aTime) {
-    return clamped((aTime - mStartTime) / mDuration, 0.0, 1.0);
+    return clamped((aTime - mStartTime) / mDuration, (double)0.0, (double)1.0);
   }
 
   nscoord VelocityComponent(double aTimeProgress,
@@ -1392,7 +1392,7 @@ AsyncScroll::CalcDurationForEventTime(TimeStamp aTime, nsIAtom *aOrigin) {
                                          kDefaultDurationToIntervalRatio * 100) / 100.0;
 
     // Duration should be at least as long as the intervals -> ratio is at least 1
-    mIntervalRatio = std::max(1.0, mIntervalRatio);
+    mIntervalRatio = std::max((double)1.0, mIntervalRatio);
 
     if (mIsFirstIteration) {
       // Starting a new scroll (i.e. not when extending an existing scroll animation),

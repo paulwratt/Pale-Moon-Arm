@@ -3597,10 +3597,10 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
         aMetrics->subscriptOffset = aMetrics->xHeight;
     }
 
-    aMetrics->underlineSize = std::max(1.0, aMetrics->underlineSize);
-    aMetrics->strikeoutSize = std::max(1.0, aMetrics->strikeoutSize);
+    aMetrics->underlineSize = std::max((double)1.0, aMetrics->underlineSize);
+    aMetrics->strikeoutSize = std::max((double)1.0, aMetrics->strikeoutSize);
 
-    aMetrics->underlineOffset = std::min(aMetrics->underlineOffset, -1.0);
+    aMetrics->underlineOffset = std::min(aMetrics->underlineOffset, (double)-1.0);
 
     if (aMetrics->maxAscent < 1.0) {
         // We cannot draw strikeout line and overline in the ascent...
@@ -3622,7 +3622,7 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     if (!mStyle.systemFont && aIsBadUnderlineFont) {
         // First, we need 2 pixels between baseline and underline at least. Because many CJK characters
         // put their glyphs on the baseline, so, 1 pixel is too close for CJK characters.
-        aMetrics->underlineOffset = std::min(aMetrics->underlineOffset, -2.0);
+        aMetrics->underlineOffset = std::min(aMetrics->underlineOffset, (double)-2.0);
 
         // Next, we put the underline to bottom of below of the descent space.
         if (aMetrics->internalLeading + aMetrics->externalLeading > aMetrics->underlineSize) {
@@ -3636,7 +3636,7 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     // will stay within the boundary.
     else if (aMetrics->underlineSize - aMetrics->underlineOffset > aMetrics->maxDescent) {
         if (aMetrics->underlineSize > aMetrics->maxDescent)
-            aMetrics->underlineSize = std::max(aMetrics->maxDescent, 1.0);
+            aMetrics->underlineSize = std::max(aMetrics->maxDescent, (double)1.0);
         // The max underlineOffset is 1px (the min underlineSize is 1px, and min maxDescent is 0px.)
         aMetrics->underlineOffset = aMetrics->underlineSize - aMetrics->maxDescent;
     }
@@ -3647,7 +3647,7 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     gfxFloat halfOfStrikeoutSize = floor(aMetrics->strikeoutSize / 2.0 + 0.5);
     if (halfOfStrikeoutSize + aMetrics->strikeoutOffset > aMetrics->maxAscent) {
         if (aMetrics->strikeoutSize > aMetrics->maxAscent) {
-            aMetrics->strikeoutSize = std::max(aMetrics->maxAscent, 1.0);
+            aMetrics->strikeoutSize = std::max(aMetrics->maxAscent, (double)1.0);
             halfOfStrikeoutSize = floor(aMetrics->strikeoutSize / 2.0 + 0.5);
         }
         gfxFloat ascent = floor(aMetrics->maxAscent + 0.5);
